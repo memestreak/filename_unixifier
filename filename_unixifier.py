@@ -4,7 +4,7 @@
 # We can [and have] done this with a shell script, but it gets unwieldy,
 # especially with multiple files.
 #
-# Usage: rename.py [--noop] filename [filename] ...
+# Usage: filename_unixifier.py [--noop] filename [filename] ...
 
 import IPython
 import argparse
@@ -82,7 +82,7 @@ class FilenameUnixifier:
 
 
 def main():
-  parser = argparse.ArgumentParser(prog='rename.py')
+  parser = argparse.ArgumentParser(prog='filename_unixifier.py')
 
   parser.add_argument(
     '--noop',
