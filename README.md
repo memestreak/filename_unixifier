@@ -4,7 +4,7 @@ This tool renames files to be UNIX idiomatic, removing spaces, etc.
 
 ## Usage
 ```sh
-filename_unixifier.py [--noop] [-i] filename [filename] ...
+filename_unixifier.py [--noop] [--ipython] [filename ...]
 
 --noop, -n    : Do not perform any writes
 --ipython, -i : Just drop into an IPython REPL for debugging

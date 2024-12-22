@@ -27,26 +27,36 @@ class FilenameUnixifier:
     # Separate the [optional] suffix to make things simpler.
     path: pathlib.PosixPath = pathlib.Path(orig_name)
     suffix: str = path.suffix
-    new_stem: str = path.stem
+
+    # Stem is the base filename without extension.
+    stem: str = path.stem
+
+    # Extract a possible numeric prefix for cleanup.
+    matches = re.match(r'(([0-9]+)[\W]*)?(.*)', stem)
+    numeric_prefix_string = matches.group(2) if matches.group(2) else ''
+    new_stem = matches.group(3)
 
     new_stem = new_stem.lower()
-    new_stem = re.sub(" ", "_", new_stem)
+    new_stem = re.sub(' ', '_', new_stem)
 
     # Clobber or replace any weird characters.
-    new_stem = re.sub("['’\"]", "", new_stem)
-    new_stem = re.sub(r"[^\w\._-]", "_", new_stem)
+    new_stem = re.sub(r"'['’\']", '', new_stem)
+    new_stem = re.sub(r'[^\w\._-]', '_', new_stem)
 
     # Polish
-    new_stem = re.sub("&", "_and_", new_stem)
+    new_stem = re.sub('&', '_and_', new_stem)
 
     # This can happen around track numbers.
-    new_stem = re.sub(r"_-", "-", new_stem)
-    new_stem = re.sub(r"-_", "-", new_stem)
+    new_stem = re.sub(r'_-', '-', new_stem)
+    new_stem = re.sub(r'-_', '-', new_stem)
 
     # Removing dupes and underscores from beginning and end.
-    new_stem = re.sub(r"_+", "_", new_stem)
-    new_stem = re.sub(r"^_", "", new_stem)
-    new_stem = re.sub(r"_$", "", new_stem)
+    new_stem = re.sub(r'_+', '_', new_stem)
+    new_stem = re.sub(r'^_', '', new_stem)
+    new_stem = re.sub(r'_$', '', new_stem)
+
+    if numeric_prefix_string:
+      new_stem = f'{numeric_prefix_string}-{new_stem}'
 
     return new_stem + suffix
 
@@ -54,22 +64,22 @@ class FilenameUnixifier:
                   orig_path: pathlib.PosixPath,
                   new_path: pathlib.PosixPath):
 
-    print(f"\"{orig_path}\" --> \"{new_path}\": ", end="")
+    print(f'"{orig_path}" --> "{new_path}": ', end='')
 
     if not orig_path.exists():
-      print("Error: Source file does not exist ❌")
+      print('Error: Source file does not exist ❌')
       return
 
     if orig_path == new_path:
-      print("INFO: skipped ✅")
+      print('INFO: skipped ✅')
       return
 
     if self.noop:
-      print("NOOP ✅")
+      print('NOOP ✅')
       return
 
     os.rename(orig_path, new_path)
-    print("✅")
+    print('✅')
 
   def rename_file(self, filename: str):
     file_to_process: pathlib.PosixPath = pathlib.Path(filename)
@@ -100,7 +110,7 @@ def main():
 
   parser.add_argument(
     'filename',
-    nargs='+',
+    nargs='*',
     type=str,
     default=None,
     help='The file to rename')
@@ -116,5 +126,5 @@ def main():
     renamer.rename_file(filename)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()
