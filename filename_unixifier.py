@@ -26,7 +26,7 @@ class FilenameUnixifier:
 
     # Separate the [optional] suffix to make things simpler.
     path: pathlib.PosixPath = pathlib.Path(orig_name)
-    suffix: str = path.suffix
+    suffix: str = path.suffix.lower()
 
     # Stem is the base filename without extension.
     stem: str = path.stem
@@ -39,20 +39,21 @@ class FilenameUnixifier:
     new_stem = new_stem.lower()
     new_stem = re.sub(' ', '_', new_stem)
 
-    # Clobber or replace any weird characters.
-    new_stem = re.sub(r"'['’\']", '', new_stem)
-    new_stem = re.sub(r'[^\w\._-]', '_', new_stem)
-
     # Polish
     new_stem = re.sub('&', '_and_', new_stem)
+
+    # Clobber or replace any weird characters.
+    new_stem = re.sub(r'["\'’`~]', '', new_stem)
+    new_stem = re.sub(r'[^\w\._-]', '_', new_stem)
 
     # This can happen around track numbers.
     new_stem = re.sub(r'_-', '-', new_stem)
     new_stem = re.sub(r'-_', '-', new_stem)
+    new_stem = re.sub(r'\._', '_', new_stem)
 
     # Removing dupes and underscores from beginning and end.
     new_stem = re.sub(r'_+', '_', new_stem)
-    new_stem = re.sub(r'^_', '', new_stem)
+    new_stem = re.sub(r'^[_-]?', '', new_stem)
     new_stem = re.sub(r'_$', '', new_stem)
 
     if numeric_prefix_string:

@@ -27,4 +27,7 @@ $ filename_unixifier.py *
 "10 - I Won’t Share You.flac" --> "10-i_wont_share_you.flac": ✅
 ```
 
+## Reference
 
+See also the command line utility `rename` which has some overlap with
+this tool.
