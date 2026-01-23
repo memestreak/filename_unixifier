@@ -11,7 +11,6 @@ import argparse
 import os
 import pathlib
 import re
-import sys
 
 
 class FilenameUnixifier:
@@ -25,7 +24,7 @@ class FilenameUnixifier:
     """Returns a computed name based on the specified original."""
 
     # Separate the [optional] suffix to make things simpler.
-    path: pathlib.PosixPath = pathlib.Path(orig_name)
+    path: pathlib.Path = pathlib.Path(orig_name)
     suffix: str = path.suffix.lower()
 
     # Stem is the base filename without extension.
@@ -33,6 +32,10 @@ class FilenameUnixifier:
 
     # Extract a possible numeric prefix for cleanup.
     matches = re.match(r'(([0-9]+)[\W]*)?(.*)', stem)
+    if not matches:
+      print('Unexpected failure to parse filename stem:', stem)
+      return orig_name
+
     numeric_prefix_string = matches.group(2) if matches.group(2) else ''
     new_stem = matches.group(3)
 
@@ -62,8 +65,8 @@ class FilenameUnixifier:
     return new_stem + suffix
 
   def __do_rename(self,
-                  orig_path: pathlib.PosixPath,
-                  new_path: pathlib.PosixPath):
+                  orig_path: pathlib.Path,
+                  new_path: pathlib.Path):
 
     print(f'"{orig_path}" --> "{new_path}": ', end='')
 
@@ -83,11 +86,11 @@ class FilenameUnixifier:
     print('✅')
 
   def rename_file(self, filename: str):
-    file_to_process: pathlib.PosixPath = pathlib.Path(filename)
-    parent: pathlib.PosixPath = file_to_process.parent
+    file_to_process: pathlib.Path = pathlib.Path(filename)
+    parent: pathlib.Path = file_to_process.parent
     orig_name: str = file_to_process.name
     new_name: str = self.generate_new_name(orig_name)
-    new_path: pathlib.PosixPath = parent.joinpath(new_name)
+    new_path: pathlib.Path = parent.joinpath(new_name)
 
     self.__do_rename(file_to_process, new_path)
 
@@ -120,7 +123,7 @@ def main():
   renamer = FilenameUnixifier(noop=args.noop)
 
   if args.ipython:
-    IPython.embed()
+    IPython.embed()  # type: ignore[no-untyped-call]
     return
 
   for filename in args.filename:
