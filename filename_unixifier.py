@@ -20,44 +20,51 @@ class FilenameUnixifier:
     self.noop = noop
 
   @staticmethod
+  def denoise_string(input_string: str):
+    """Returns the input string with common garbage removed or mitigated."""
+
+    ret_val = input_string.lower()
+    ret_val = re.sub(' ', '_', ret_val)
+
+    # Polish
+    ret_val = re.sub('&', '_and_', ret_val)
+
+    # Clobber or replace any weird characters.
+    ret_val = re.sub(r'["\'’`~]', '', ret_val)
+    ret_val = re.sub(r'[^\w\._-]', '_', ret_val)
+
+    # This can happen around track numbers.
+    ret_val = re.sub(r'_-', '-', ret_val)
+    ret_val = re.sub(r'-_', '-', ret_val)
+    ret_val = re.sub(r'\._', '_', ret_val)
+
+    # Removing dupes and underscores from beginning and end.
+    ret_val = re.sub(r'_+', '_', ret_val)
+    ret_val = re.sub(r'^[_-]?', '', ret_val)
+    ret_val = re.sub(r'_$', '', ret_val)
+
+    return ret_val
+
+  @staticmethod
   def generate_new_name(orig_name: str):
     """Returns a computed name based on the specified original."""
 
     # Separate the [optional] suffix to make things simpler.
     path: pathlib.Path = pathlib.Path(orig_name)
-    suffix: str = path.suffix.lower()
+    suffix: str = FilenameUnixifier.denoise_string(path.suffix)
 
     # Stem is the base filename without extension.
     stem: str = path.stem
 
     # Extract a possible numeric prefix for cleanup.
-    matches = re.match(r'(([0-9]+)[\W]*)?(.*)', stem)
+    matches = re.match(r'(([0-9]+)[\W]+)?(.*)', stem)
     if not matches:
       print('Unexpected failure to parse filename stem:', stem)
       return orig_name
 
     numeric_prefix_string = matches.group(2) if matches.group(2) else ''
     new_stem = matches.group(3)
-
-    new_stem = new_stem.lower()
-    new_stem = re.sub(' ', '_', new_stem)
-
-    # Polish
-    new_stem = re.sub('&', '_and_', new_stem)
-
-    # Clobber or replace any weird characters.
-    new_stem = re.sub(r'["\'’`~]', '', new_stem)
-    new_stem = re.sub(r'[^\w\._-]', '_', new_stem)
-
-    # This can happen around track numbers.
-    new_stem = re.sub(r'_-', '-', new_stem)
-    new_stem = re.sub(r'-_', '-', new_stem)
-    new_stem = re.sub(r'\._', '_', new_stem)
-
-    # Removing dupes and underscores from beginning and end.
-    new_stem = re.sub(r'_+', '_', new_stem)
-    new_stem = re.sub(r'^[_-]?', '', new_stem)
-    new_stem = re.sub(r'_$', '', new_stem)
+    new_stem = FilenameUnixifier.denoise_string(new_stem)
 
     if numeric_prefix_string:
       new_stem = f'{numeric_prefix_string}-{new_stem}'

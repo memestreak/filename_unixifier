@@ -19,9 +19,10 @@ class TestConversion(unittest.TestCase):
 
   def test_common_cases(self):
     should_be_equal_tuples = [
-      ("01: Song Name.FLAC",               "01-song_name.flac"),
-      ("12. Get Back - The Beatles.flac",  "12-get_back-the_beatles.flac"),
-      ("03. Some Song (2021 remix).flac",  "03-some_song_2021_remix.flac"),
+      ("01: Song Name.FLAC",                "01-song_name.flac"),
+      ("12. Get Back - The Beatles.flac",   "12-get_back-the_beatles.flac"),
+      ("03. Some Song (2021 remix).flac",   "03-some_song_2021_remix.flac"),
+      ("48k (Fractal, Line 6, Suhr, etc.)", "48k_fractal_line_6_suhr_etc"),
     ]
 
     for pair in should_be_equal_tuples:
