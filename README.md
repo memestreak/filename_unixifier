@@ -8,9 +8,9 @@ filename_unixifier.py [--noop] [--ipython] [filename ...]
 
 --noop, -n    : Do not perform any writes
 --ipython, -i : Just drop into an IPython REPL for debugging
-
+```
 Invocation on a directory tree could be done with:
-
+```
 find my_dir -depth -print0 | xargs -0 -I {} filename_unixifier.py "{}"
 ```
 
