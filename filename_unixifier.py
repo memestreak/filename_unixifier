@@ -6,7 +6,6 @@
 #
 # Usage: filename_unixifier.py [--noop] filename [filename] ...
 
-import IPython
 import argparse
 import os
 import pathlib
@@ -130,6 +129,7 @@ def main():
   renamer = FilenameUnixifier(noop=args.noop)
 
   if args.ipython:
+    import IPython
     IPython.embed()  # type: ignore[no-untyped-call]
     return
 
