@@ -91,7 +91,12 @@ class FilenameUnixifier:
     os.rename(orig_path, new_path)
     print('✅')
 
-  def rename_file(self, filename: str):
+  def rename_file(self, filename: str) -> None:
+    """Rename a single file or directory to its unixified name.
+
+    Args:
+        filename: Path to the file or directory to rename.
+    """
     file_to_process: pathlib.Path = pathlib.Path(filename)
     parent: pathlib.Path = file_to_process.parent
     orig_name: str = file_to_process.name
@@ -99,6 +104,31 @@ class FilenameUnixifier:
     new_path: pathlib.Path = parent.joinpath(new_name)
 
     self.__do_rename(file_to_process, new_path)
+
+  def rename_recursive(self, directory: str) -> None:
+    """Recursively rename all files and directories, bottom-up.
+
+    Walks the directory tree depth-first so that children are
+    renamed before their parents, keeping paths valid throughout.
+
+    Args:
+        directory: Path to the directory to process.
+
+    Raises:
+        NotADirectoryError: If the path is not a directory.
+    """
+    dir_path = pathlib.Path(directory)
+    if not dir_path.is_dir():
+      raise NotADirectoryError(
+        f'Not a directory: {directory}'
+      )
+
+    for dirpath, _dirnames, filenames in os.walk(
+      directory, topdown=False
+    ):
+      for filename in filenames:
+        self.rename_file(os.path.join(dirpath, filename))
+      self.rename_file(dirpath)
 
 
 def main():
@@ -119,6 +149,14 @@ def main():
     help='Just drop in to an IPython REPL for debugging.')
 
   parser.add_argument(
+    '--recursive',
+    '-r',
+    default=False,
+    action=argparse.BooleanOptionalAction,
+    help='Recurse into directories, renaming contents '
+         'bottom-up.')
+
+  parser.add_argument(
     'filename',
     nargs='*',
     type=str,
@@ -129,12 +167,15 @@ def main():
   renamer = FilenameUnixifier(noop=args.noop)
 
   if args.ipython:
-    import IPython
+    import IPython  # type: ignore[import-not-found]
     IPython.embed()  # type: ignore[no-untyped-call]
     return
 
   for filename in args.filename:
-    renamer.rename_file(filename)
+    if args.recursive and pathlib.Path(filename).is_dir():
+      renamer.rename_recursive(filename)
+    else:
+      renamer.rename_file(filename)
 
 
 if __name__ == '__main__':

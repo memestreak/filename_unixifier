@@ -153,6 +153,97 @@ class TestRenameFile(unittest.TestCase):
     self.assertTrue(os.path.exists(orig))
 
 
+class TestRenameRecursive(unittest.TestCase):
+  """Tests for rename_recursive() using a real temp directory."""
+
+  def setUp(self):
+    self.temp_dir = tempfile.mkdtemp()
+
+  def tearDown(self):
+    shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+  def _make_tree(self):
+    """Build a small directory tree with ugly names.
+
+    Structure:
+        temp_dir/
+          My Album/
+            01 - Song One.flac
+            02 - Song Two.flac
+            Cover Art/
+              Front Cover.jpg
+    """
+    album = os.path.join(self.temp_dir, 'My Album')
+    art = os.path.join(album, 'Cover Art')
+    os.makedirs(art)
+    for name in ['01 - Song One.flac', '02 - Song Two.flac']:
+      open(os.path.join(album, name), 'w').close()
+    open(os.path.join(art, 'Front Cover.jpg'), 'w').close()
+    return album
+
+  def test_recursive_renames_files_and_dirs(self):
+    album = self._make_tree()
+    renamer = filename_unixifier.FilenameUnixifier(noop=False)
+    renamer.rename_recursive(album)
+
+    renamed_album = os.path.join(self.temp_dir, 'my_album')
+    self.assertTrue(os.path.isdir(renamed_album))
+    self.assertFalse(os.path.exists(album))
+
+    expected_files = [
+      os.path.join(renamed_album, '01-song_one.flac'),
+      os.path.join(renamed_album, '02-song_two.flac'),
+    ]
+    for path in expected_files:
+      self.assertTrue(os.path.exists(path), path)
+
+    renamed_art = os.path.join(renamed_album, 'cover_art')
+    self.assertTrue(os.path.isdir(renamed_art))
+    self.assertTrue(
+      os.path.exists(
+        os.path.join(renamed_art, 'front_cover.jpg')
+      )
+    )
+
+  def test_recursive_noop_leaves_tree_unchanged(self):
+    album = self._make_tree()
+    renamer = filename_unixifier.FilenameUnixifier(noop=True)
+    renamer.rename_recursive(album)
+
+    # Original structure should be intact.
+    self.assertTrue(os.path.isdir(album))
+    art = os.path.join(album, 'Cover Art')
+    self.assertTrue(os.path.isdir(art))
+    self.assertTrue(
+      os.path.exists(
+        os.path.join(album, '01 - Song One.flac')
+      )
+    )
+
+  def test_recursive_on_non_directory_raises(self):
+    path = os.path.join(self.temp_dir, 'a_file.txt')
+    open(path, 'w').close()
+    renamer = filename_unixifier.FilenameUnixifier(noop=False)
+    with self.assertRaises(NotADirectoryError):
+      renamer.rename_recursive(path)
+
+  def test_recursive_on_already_clean_tree(self):
+    """No renames when everything is already clean."""
+    clean_dir = os.path.join(self.temp_dir, 'clean')
+    os.makedirs(os.path.join(clean_dir, 'sub'))
+    open(
+      os.path.join(clean_dir, 'sub', 'file.txt'), 'w'
+    ).close()
+    renamer = filename_unixifier.FilenameUnixifier(noop=False)
+    renamer.rename_recursive(clean_dir)
+
+    self.assertTrue(
+      os.path.exists(
+        os.path.join(clean_dir, 'sub', 'file.txt')
+      )
+    )
+
+
 if __name__ == '__main__':
   unittest.main()
 
